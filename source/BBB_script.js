@@ -1,3 +1,165 @@
+// Some useful variable contening the DOM element
+var pic = document.getElementById('bgPic');
+var trTop = document.getElementById('trTop');
+var trBottom = document.getElementById('trBottom');
+var parent = document.getElementById('interactiveMapContainer');
+
+/**********************************************************************/
+
+// Definition of the offsets of "Where is the first pin from the left/top corner (0,0 coordinate) of the picture"
+// Copy/Paste adapt to add yours
+
+var P8Offset = {
+	"xOffset" : 135, //for the x axis
+	"yOffset" : 21, //for y axis
+	"deltaX" : +14.5, //what is the derivation of the X axis 
+	"deltaY" : +0.1, //what is the derivation of the Y axis
+	"pitch" : 15, //space between two pins (on the vertical axis), need to be increase on bigger resolution picture
+	"prefix" : "P8_" //The name of this header (for the span IDs )
+};
+
+var P9Offset = {
+	"xOffset" : 134,
+	"yOffset" : 299,
+	"deltaX" : +14.4,
+	"deltaY" : +0.03,
+	"pitch" : 15,
+	"prefix" : "P9_"
+};
+
+/**********************************************************************/
+
+// startup function to populate the picture with span when the DOM is ready
+(function(){
+	pic.addEventListener('load', function() {
+		addElements(P8);
+		addElements(P9);
+		addCheckboxBehavior();
+	});
+})()
+
+// This function add the checkbox behavior to slighty reveal the pins or not
+function addCheckboxBehavior() {
+	var el = document.getElementById('optionsReveal');
+	var inputs = el.getElementsByTagName('input'); 
+	for(var i=0; i<inputs.length; i++) {
+		inputs[i].addEventListener('click', function() {
+			console.log(this);
+			var nom = this.id.substr(5);
+			var elements = document.querySelectorAll('.' + nom);
+			if(this.checked) {
+				Array.prototype.forEach.call(elements, function(el, i) {
+        			el.className += ' ' + 'opacity';
+        		});
+			} else {
+  				Array.prototype.forEach.call(elements, function(el, i){
+        			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+        		});
+			}
+		});
+	}
+}
+
+// This is the main function.
+// It populate the DOM with plenty of empty span that you can hover
+function addElements(liste) {
+	var offset;
+
+  	var picOffset = pic.getBoundingClientRect();
+
+  	// choose the right offset definition depending on the header
+  	switch(liste) {
+  		case(P8) : offset = P8Offset; break;
+  		case(P9) : offset = P9Offset; break;
+  		default : return; break;
+  	}
+  	offset.xOffset += picOffset.left; //add the horizontal picture offset
+  	offset.yOffset += picOffset.top; //add the vertical picture offset
+
+	// populate
+	for(var x in liste) {
+    	var newSpan = document.createElement('span');
+    	var realX = parseInt(x)+1;
+    	newSpan.setAttribute('id', offset.prefix + realX);
+    	newSpan.classList.add("headerPin");
+
+    	// class according to notes
+		switch(liste[x].Notes) {
+			case("hdmi"): newSpan.classList.add("hdmiPin");break;
+			case("emmc2"): newSpan.classList.add("emmc2Pin");break;
+			case("I2C2"): newSpan.classList.add("i2c2Pin");break;
+			case("mcasp0"): newSpan.classList.add("mcasp0Pin");break;
+			case(""): newSpan.classList.add("freePin");break;
+			default: newSpan.classList.add("unknowPin");break;
+		}
+		if(liste[x].Notes.substr(0,5) === "Power") {
+			newSpan.classList.remove("unknowPin");
+			newSpan.classList.add("powerPin");
+		}
+
+    	// position of the span element, mathematics here I come
+    	if(realX%2) {
+			  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1)/2)) + "px";
+			  newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
+    	} else {
+			  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-2)/2)) + "px";
+			  newSpan.style.top = (offset.yOffset - offset.pitch + offset.deltaY*realX) + "px";
+    	}
+
+    	// add the eventListener
+    	newSpan.addEventListener('mouseover', hovering);
+    	
+    	// and finally add the span to the div
+    	parent.appendChild(newSpan);
+    }
+}
+
+
+// This is the function triggered everytime the mouse enter a span.
+// It refresh the table row (take the datas from the big array below)
+function hovering(evt) {
+	var el = evt.target ? evt.target : evt.toElement; // IE/Mozilla/Chrome hack
+	var id = el.getAttribute('id');
+	var P = id.substr(0,2);
+	var idx = parseInt(id.substr(3))-1;
+	var liste = null;
+
+	// Decide what JSON array to use according to the id of the span
+	switch(P) {
+		case('P8') : liste = P8; break;
+		case('P9') : liste = P9; break;
+		default: return; break;
+	}
+
+	var data = liste[idx]; //the element to use from the JSON Array
+	var content = "<tr>";
+	content += '<td>' + ((data['Head_pin'] != "") ? data['Head_pin'] : ' - ') + '</td>';
+	content += '<td>' + ((data['$PINS'] != "") ? data['$PINS'] : ' - ') + '</td>';
+	content += '<td>' + ((data['ADDR/OFFSET'] != "") ? data['ADDR/OFFSET'] : ' - ') + '</td>';
+	content += '<td>' + ((data['Name'] != "") ? data['Name'] : ' - ') + '</td>';
+	content += '<td>' + ((data['GPIO No'] != "") ? data['GPIO No'] : ' - ') + '</td>';
+	content += '<td>' + ((data['PIN'] != "") ? data['PIN'] : ' - ') + '</td>';
+	content += '<td colspan="2">' + ((data['Notes'] != "") ? data['Notes'] : ' - ') + '</td>';
+	content += '</tr>';
+	trTop.innerHTML = content; //update the top row (functions)
+
+	content = '<tr>';
+	content += '<td>' + ((data['Mode7'] != "") ? data['Mode7'] : ' - ') + '</td>';
+	content += '<td>' + ((data['Mode6'] != "") ? data['Mode6'] : ' - ') + '</td>';
+	content += '<td>' + ((data['Mode5'] != "") ? data['Mode5'] : ' - ') + '</td>';
+	content += '<td>' + ((data['Mode4'] != "") ? data['Mode4'] : ' - ') + '</td>';
+	content += '<td>' + ((data['Mode3'] != "") ? data['Mode3'] : ' - ') + '</td>';
+	content += '<td>' + ((data['Mode2'] != "") ? data['Mode2'] : ' - ') + '</td>';
+	content += '<td>' + ((data['Mode1'] != "") ? data['Mode1'] : ' - ') + '</td>';
+	content += '<td>' + ((data['Mode0'] != "") ? data['Mode0'] : ' - ') + '</td>';
+	content += '</tr>';
+	trBottom.innerHTML = content; //update the bottome row (modes)
+}
+
+/**********************************************************************/
+
+// LONNNGGGGG definition of all the Pins...
+
 var P8 = [
 {"Head_pin":"P8_01","$PINS":null,"ADDR/OFFSET":"","GPIO No.":null,"Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
 {"Head_pin":"P8_02","$PINS":null,"ADDR/OFFSET":"","GPIO No.":null,"Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
@@ -96,141 +258,3 @@ var P9 = [
 {"Head_pin":"P9_45","$PINS":null,"ADDR/OFFSET":"","Name":"GND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""},
 {"Head_pin":"P9_46","$PINS":null,"ADDR/OFFSET":"","Name":"GND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""}];
 
-var pic = document.getElementById('bgPic');
-var trTop = document.getElementById('trTop');
-var trBottom = document.getElementById('trBottom');
-var parent = document.getElementById('interactiveMapContainer');
-
-var P8Offset = {
-	"xOffset" : 135,
-	"yOffset" : 21,
-	"deltaY" : +0.1,
-	"deltaX" : +14.5,
-	"prefix" : "P8_"
-};
-
-var P9Offset = {
-	"xOffset" : 134,
-	"yOffset" : 299,
-	"deltaY" : +0.03,
-	"deltaX" : +14.4,
-	"prefix" : "P9_"
-};
-
-(function(){
-	pic.addEventListener('load', function() {
-		addElements(P8);
-		addElements(P9);
-		addCheckboxBehavior();
-	});
-})()
-
-function addCheckboxBehavior() {
-	var el = document.getElementById('optionsReveal');
-	var inputs = el.getElementsByTagName('input'); 
-	for(var i=0; i<inputs.length; i++) {
-		inputs[i].addEventListener('click', function() {
-			console.log(this);
-			var nom = this.id.substr(5);
-			var elements = document.querySelectorAll('.' + nom);
-			if(this.checked) {
-				Array.prototype.forEach.call(elements, function(el, i) {
-        			el.className += ' ' + 'opacity';
-        		});
-			} else {
-  				Array.prototype.forEach.call(elements, function(el, i){
-        			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-        		});
-			}
-		});
-	}
-}
-
-function addElements(liste) {
-	var offset;
-
-  	var picOffset = pic.getBoundingClientRect();
-
-  	switch(liste) {
-  		case(P8) : offset = P8Offset; break;
-  		case(P9) : offset = P9Offset; break;
-  		default : return; break;
-  	}
-  	offset.xOffset += picOffset.left;
-  	offset.yOffset += picOffset.top;
-
-	//populate
-	for(var x in liste) {
-    	var newSpan = document.createElement('span');
-    	var realX = parseInt(x)+1;
-    	newSpan.setAttribute('id', offset.prefix + realX);
-    	newSpan.classList.add("headerPin");
-    	//class according to notes
-		switch(liste[x].Notes) {
-			case("hdmi"): newSpan.classList.add("hdmiPin");break;
-			case("emmc2"): newSpan.classList.add("emmc2Pin");break;
-			case("I2C2"): newSpan.classList.add("i2c2Pin");break;
-			case("mcasp0"): newSpan.classList.add("mcasp0Pin");break;
-			case(""): newSpan.classList.add("freePin");break;
-			default: newSpan.classList.add("unknowPin");break;
-		}
-		if(liste[x].Notes.substr(0,5) === "Power") {
-			newSpan.classList.remove("unknowPin");
-			newSpan.classList.add("powerPin");
-		}
-    	//position of the span element
-    	if(realX%2) {
-			  // newSpan.style.left = (xOffset + deltaX*realX) + "px";
-			  // newSpan.style.top = (yOffset - deltaY*((realX-1)/2)) + "px";
-			  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1)/2)) + "px";
-			  newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
-    	} else {
-    		// newSpan.style.left = (xOffset + 15 + deltaX*realX) + "px";
-    		// newSpan.style.top = (yOffset - deltaY*((realX-2)/2)) + "px";
-			  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-2)/2)) + "px";
-			  newSpan.style.top = (offset.yOffset - 15 + offset.deltaY*realX) + "px";
-    	}
-    	//add the eventListener
-    	newSpan.addEventListener('mouseover', hovering);
-    	//add the span to the div
-    	parent.appendChild(newSpan);
-    }
-}
-
-function hovering(evt) {
-	var el = evt.target ? evt.target : evt.toElement;
-	var id = el.getAttribute('id');
-	var P = id.substr(0,2);
-	var idx = parseInt(id.substr(3))-1;
-	var liste = null;
-
-	switch(P) {
-		case('P8') : liste = P8; break;
-		case('P9') : liste = P9; break;
-		default: return; break;
-	}
-
-	var data = liste[idx]; //the element to use
-	var content = "<tr>";
-	content += '<td>' + ((data['Head_pin'] != "") ? data['Head_pin'] : ' - ') + '</td>';
-	content += '<td>' + ((data['$PINS'] != "") ? data['$PINS'] : ' - ') + '</td>';
-	content += '<td>' + ((data['ADDR/OFFSET'] != "") ? data['ADDR/OFFSET'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Name'] != "") ? data['Name'] : ' - ') + '</td>';
-	content += '<td>' + ((data['GPIO No'] != "") ? data['GPIO No'] : ' - ') + '</td>';
-	content += '<td>' + ((data['PIN'] != "") ? data['PIN'] : ' - ') + '</td>';
-	content += '<td colspan="2">' + ((data['Notes'] != "") ? data['Notes'] : ' - ') + '</td>';
-	content += '</tr>';
-	trTop.innerHTML = content;
-
-	content = '<tr>';
-	content += '<td>' + ((data['Mode7'] != "") ? data['Mode7'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode6'] != "") ? data['Mode6'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode5'] != "") ? data['Mode5'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode4'] != "") ? data['Mode4'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode3'] != "") ? data['Mode3'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode2'] != "") ? data['Mode2'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode1'] != "") ? data['Mode1'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode0'] != "") ? data['Mode0'] : ' - ') + '</td>';
-	content += '</tr>';
-	trBottom.innerHTML = content;
-}
