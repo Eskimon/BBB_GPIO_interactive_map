@@ -12,10 +12,10 @@ var parent = document.getElementById('interactiveMapContainer');
 var P8Offset = {
 	"xOffset" : 135, //for the x axis
 	"yOffset" : 21, //for y axis
-	"deltaX" : +14.5, //what is the derivation of the X axis 
-	"deltaY" : +0.1, //what is the derivation of the Y axis
+	"deltaX" : +14.5, //what is the derivation on the X axis between n and n-1 pin
+	"deltaY" : +0.1, //what is the derivation on the Y axis between n and n-1 pin
 	"pitch" : 15, //space between two pins (on the vertical axis), need to be increase on bigger resolution picture
-	"prefix" : "P8_" //The name of this header (for the span IDs )
+	"prefix" : "P8" //The name of this header (for the span IDs )
 };
 
 var P9Offset = {
@@ -24,7 +24,17 @@ var P9Offset = {
 	"deltaX" : +14.4,
 	"deltaY" : +0.03,
 	"pitch" : 15,
-	"prefix" : "P9_"
+	"prefix" : "P9"
+};
+
+// Debug Serial Header
+var DSHOffset = {
+	"xOffset" : 262,
+	"yOffset" : 266,
+	"deltaX" : +14.4,
+	"deltaY" : +0.03,
+	"pitch" : 0, //value of 0, the connector is on one line only
+	"prefix" : "DSH"
 };
 
 /**********************************************************************/
@@ -34,6 +44,7 @@ var P9Offset = {
 	pic.addEventListener('load', function() {
 		addElements(P8);
 		addElements(P9);
+		addElements(DSH);
 		addCheckboxBehavior();
 	});
 })()
@@ -71,6 +82,7 @@ function addElements(liste) {
   	switch(liste) {
   		case(P8) : offset = P8Offset; break;
   		case(P9) : offset = P9Offset; break;
+  		case(DSH) : offset = DSHOffset; break;
   		default : return; break;
   	}
   	offset.xOffset += picOffset.left; //add the horizontal picture offset
@@ -80,7 +92,7 @@ function addElements(liste) {
 	for(var x in liste) {
     	var newSpan = document.createElement('span');
     	var realX = parseInt(x)+1;
-    	newSpan.setAttribute('id', offset.prefix + realX);
+    	newSpan.setAttribute('id', offset.prefix + '_' + realX);
     	newSpan.classList.add("headerPin");
 
     	// class according to notes
@@ -89,6 +101,7 @@ function addElements(liste) {
 			case("emmc2"): newSpan.classList.add("emmc2Pin");break;
 			case("I2C2"): newSpan.classList.add("i2c2Pin");break;
 			case("mcasp0"): newSpan.classList.add("mcasp0Pin");break;
+			case("Serial Debug Header"): newSpan.classList.add("serialdebugPin");break;
 			case(""): newSpan.classList.add("freePin");break;
 			default: newSpan.classList.add("unknowPin");break;
 		}
@@ -98,17 +111,24 @@ function addElements(liste) {
 		}
 
     	// position of the span element, mathematics here I come
-    	if(realX%2) {
-			  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1)/2)) + "px";
-			  newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
+    	if(offset.pitch === 0) {
+    		//element on one line (like JTAG)
+    		newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1))) + "px";
+			newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
     	} else {
-			  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-2)/2)) + "px";
-			  newSpan.style.top = (offset.yOffset - offset.pitch + offset.deltaY*realX) + "px";
-    	}
+    		//elements on two line (like P8/9 headers)
+	    	if(realX%2) {
+				  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1)/2)) + "px";
+				  newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
+	    	} else {
+				  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-2)/2)) + "px";
+				  newSpan.style.top = (offset.yOffset - offset.pitch + offset.deltaY*realX) + "px";
+	    	}
+	    }
 
     	// add the eventListener
     	newSpan.addEventListener('mouseover', hovering);
-    	
+
     	// and finally add the span to the div
     	parent.appendChild(newSpan);
     }
@@ -120,14 +140,15 @@ function addElements(liste) {
 function hovering(evt) {
 	var el = evt.target ? evt.target : evt.toElement; // IE/Mozilla/Chrome hack
 	var id = el.getAttribute('id');
-	var P = id.substr(0,2);
-	var idx = parseInt(id.substr(3))-1;
+	var P = id.substr(0,id.indexOf("_"));
+	var idx = parseInt(id.substr(id.indexOf("_")+1))-1;
 	var liste = null;
 
 	// Decide what JSON array to use according to the id of the span
 	switch(P) {
 		case('P8') : liste = P8; break;
 		case('P9') : liste = P9; break;
+		case('DSH') : liste = DSH; break;
 		default: return; break;
 	}
 
@@ -136,8 +157,8 @@ function hovering(evt) {
 	content += '<td>' + ((data['Head_pin'] != "") ? data['Head_pin'] : ' - ') + '</td>';
 	content += '<td>' + ((data['$PINS'] != "") ? data['$PINS'] : ' - ') + '</td>';
 	content += '<td>' + ((data['ADDR/OFFSET'] != "") ? data['ADDR/OFFSET'] : ' - ') + '</td>';
+	content += '<td>' + ((data['GPIO No.'] != "") ? data['GPIO No.'] : ' - ') + '</td>';
 	content += '<td>' + ((data['Name'] != "") ? data['Name'] : ' - ') + '</td>';
-	content += '<td>' + ((data['GPIO No'] != "") ? data['GPIO No'] : ' - ') + '</td>';
 	content += '<td>' + ((data['PIN'] != "") ? data['PIN'] : ' - ') + '</td>';
 	content += '<td colspan="2">' + ((data['Notes'] != "") ? data['Notes'] : ' - ') + '</td>';
 	content += '</tr>';
@@ -160,9 +181,18 @@ function hovering(evt) {
 
 // LONNNGGGGG definition of all the Pins...
 
+var DSH = [
+{"Head_pin":"DSH_01","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
+{"Head_pin":"DSH_02","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"NC","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Not Connected"},
+{"Head_pin":"DSH_03","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"NC","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Not Connected"},
+{"Head_pin":"DSH_04","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"TXD","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Serial Debug Header"},
+{"Head_pin":"DSH_05","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"RXD","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Serial Debug Header"},
+{"Head_pin":"DSH_06","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"NC","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Not Connected"},
+];
+""
 var P8 = [
-{"Head_pin":"P8_01","$PINS":null,"ADDR/OFFSET":"","GPIO No.":null,"Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
-{"Head_pin":"P8_02","$PINS":null,"ADDR/OFFSET":"","GPIO No.":null,"Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
+{"Head_pin":"P8_01","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
+{"Head_pin":"P8_02","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
 {"Head_pin":"P8_03","$PINS":6,"ADDR/OFFSET":"0x818/018","GPIO No.":38,"Name":"GPIO1_6","Mode7":"gpio1[6]","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"mmc1_dat6","Mode0":"gpmc_ad6","PIN":"R9","Notes":"emmc2"},
 {"Head_pin":"P8_04","$PINS":7,"ADDR/OFFSET":"0x81c/01c","GPIO No.":39,"Name":"GPIO1_7","Mode7":"gpio1[7]","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"mmc1_dat7","Mode0":"gpmc_ad7","PIN":"T9","Notes":"emmc2"},
 {"Head_pin":"P8_05","$PINS":2,"ADDR/OFFSET":"0x808/008","GPIO No.":34,"Name":"GPIO1_2","Mode7":"gpio1[2]","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"mmc1_dat2","Mode0":"gpmc_ad2","PIN":"R8","Notes":"emmc2"},
@@ -209,16 +239,16 @@ var P8 = [
 {"Head_pin":"P8_46","$PINS":41,"ADDR/OFFSET":"0x8a4/0a4","GPIO No.":71,"Name":"GPIO2_7","Mode7":"gpio2[7]","Mode6":"pr1_pru1_pru_r31_1","Mode5":"pr1_pru1_pru_r30_1","Mode4":"","Mode3":"ehrpwm2B","Mode2":"","Mode1":"gpmc_a1","Mode0":"lcd_data1","PIN":"R2","Notes":"hdmi"}];
 
 var P9 = [
-{"Head_pin":"P9_01","$PINS":null,"ADDR/OFFSET":"","Name":"GND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
-{"Head_pin":"P9_02","$PINS":null,"ADDR/OFFSET":"","Name":"GND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
-{"Head_pin":"P9_03","$PINS":null,"ADDR/OFFSET":"","Name":"DC_3.3V","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC 3.3V"},
-{"Head_pin":"P9_04","$PINS":null,"ADDR/OFFSET":"","Name":"DC_3.3V","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC 3.3V"},
-{"Head_pin":"P9_05","$PINS":null,"ADDR/OFFSET":"","Name":"VDD_5V","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC VDD_5V"},
-{"Head_pin":"P9_06","$PINS":null,"ADDR/OFFSET":"","Name":"VDD_5V","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC VDD_5V"},
-{"Head_pin":"P9_07","$PINS":null,"ADDR/OFFSET":"","Name":"SYS_5V","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC PWR_BUT"},
-{"Head_pin":"P9_08","$PINS":null,"ADDR/OFFSET":"","Name":"SYS_5V","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC SYS_5V"},
-{"Head_pin":"P9_09","$PINS":null,"ADDR/OFFSET":"","Name":"PWR_BUT","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC SYS_5V"},
-{"Head_pin":"P9_10","$PINS":null,"ADDR/OFFSET":"","Name":"SYS_RESETn","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"SYS_RES","Notes":"SYS_RES"},
+{"Head_pin":"P9_01","$PINS":"","ADDR/OFFSET":"","Name":"GND","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
+{"Head_pin":"P9_02","$PINS":"","ADDR/OFFSET":"","Name":"GND","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
+{"Head_pin":"P9_03","$PINS":"","ADDR/OFFSET":"","Name":"DC_3.3V","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC 3.3V"},
+{"Head_pin":"P9_04","$PINS":"","ADDR/OFFSET":"","Name":"DC_3.3V","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC 3.3V"},
+{"Head_pin":"P9_05","$PINS":"","ADDR/OFFSET":"","Name":"VDD_5V","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC VDD_5V"},
+{"Head_pin":"P9_06","$PINS":"","ADDR/OFFSET":"","Name":"VDD_5V","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC VDD_5V"},
+{"Head_pin":"P9_07","$PINS":"","ADDR/OFFSET":"","Name":"SYS_5V","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC PWR_BUT"},
+{"Head_pin":"P9_08","$PINS":"","ADDR/OFFSET":"","Name":"SYS_5V","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC SYS_5V"},
+{"Head_pin":"P9_09","$PINS":"","ADDR/OFFSET":"","Name":"PWR_BUT","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: DC SYS_5V"},
+{"Head_pin":"P9_10","$PINS":"","ADDR/OFFSET":"","Name":"SYS_RESETn","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"SYS_RES","Notes":"SYS_RES"},
 {"Head_pin":"P9_11","$PINS":28,"ADDR/OFFSET":"0x870/070","Name":"UART4_RXD","GPIO No":30,"Mode7":"gpio0[30]","Mode6":"uart4_rxd_mux2","Mode5":"","Mode4":"mmc1_sdcd","Mode3":"rmii2_crs_dv","Mode2":"gpmc_csn4","Mode1":"mii2_crs","Mode0":"gpmc_wait0","PIN":"T17","Notes":""},
 {"Head_pin":"P9_12","$PINS":30,"ADDR/OFFSET":"0x878/078","Name":"GPIO1_28","GPIO No":60,"Mode7":"gpio1[28]","Mode6":"mcasp0_aclkr_mux3","Mode5":"","Mode4":"gpmc_dir","Mode3":"mmc2_dat3","Mode2":"gpmc_csn6","Mode1":"mii2_col","Mode0":"gpmc_be1n","PIN":"U18","Notes":""},
 {"Head_pin":"P9_13","$PINS":29,"ADDR/OFFSET":"0x874/074","Name":"UART4_TXD","GPIO No":31,"Mode7":"gpio0[31]","Mode6":"uart4_txd_mux2","Mode5":"","Mode4":"mmc2_sdcd","Mode3":"rmii2_rxerr","Mode2":"gpmc_csn5","Mode1":"mii2_rxerr","Mode0":"gpmc_wpn","PIN":"U17","Notes":""},
@@ -240,21 +270,21 @@ var P9 = [
 {"Head_pin":"P9_29","$PINS":101,"ADDR/OFFSET":"0x994/194","Name":"SPI1_D0","GPIO No":111,"Mode7":"gpio3[15]","Mode6":"pr1_pru0_pru_r31_1","Mode5":"pr1_pru0_pru_r30_1","Mode4":"mmc1_sdcd_mux1","Mode3":"spi1_d0","Mode2":"","Mode1":"ehrpwm0B","Mode0":"mcasp0_fsx","PIN":"B13","Notes":"mcasp0"},
 {"Head_pin":"P9_30","$PINS":102,"ADDR/OFFSET":"0x998/198","Name":"SPI1_D1","GPIO No":112,"Mode7":"gpio3[16]","Mode6":"pr1_pru0_pru_r31_2","Mode5":"pr1_pru0_pru_r30_2","Mode4":"mmc2_sdcd_mux1","Mode3":"spi1_d1","Mode2":"","Mode1":"ehrpwm0_tripzone","Mode0":"mcasp0_axr0","PIN":"D12","Notes":"mcasp0 ?"},
 {"Head_pin":"P9_31","$PINS":100,"ADDR/OFFSET":"0x990/190","Name":"SPI1_SCLK","GPIO No":110,"Mode7":"gpio3[14]","Mode6":"pr1_pru0_pru_r31_0","Mode5":"pr1_pru0_pru_r30_0","Mode4":"mmc0_sdcd_mux1","Mode3":"spi1_sclk","Mode2":"","Mode1":"ehrpwm0A","Mode0":"mcasp0_aclkx","PIN":"A13","Notes":"mcasp0"},
-{"Head_pin":"P9_32","$PINS":null,"ADDR/OFFSET":"","Name":"VADC","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: ADC Ref. 1.8V"},
-{"Head_pin":"P9_33","$PINS":null,"ADDR/OFFSET":"","Name":"AIN4","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"C8","Notes":""},
-{"Head_pin":"P9_34","$PINS":null,"ADDR/OFFSET":"","Name":"AGND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
-{"Head_pin":"P9_35","$PINS":null,"ADDR/OFFSET":"","Name":"AIN6","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"A8","Notes":""},
-{"Head_pin":"P9_36","$PINS":null,"ADDR/OFFSET":"","Name":"AIN5","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"B8","Notes":""},
-{"Head_pin":"P9_37","$PINS":null,"ADDR/OFFSET":"","Name":"AIN2","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"B7","Notes":""},
-{"Head_pin":"P9_38","$PINS":null,"ADDR/OFFSET":"","Name":"AIN3","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"A7","Notes":""},
-{"Head_pin":"P9_39","$PINS":null,"ADDR/OFFSET":"","Name":"AIN0","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"B6","Notes":""},
-{"Head_pin":"P9_40","$PINS":null,"ADDR/OFFSET":"","Name":"AIN1","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"C7","Notes":""},
+{"Head_pin":"P9_32","$PINS":"","ADDR/OFFSET":"","Name":"VADC","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: ADC Ref. 1.8V"},
+{"Head_pin":"P9_33","$PINS":"","ADDR/OFFSET":"","Name":"AIN4","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"C8","Notes":""},
+{"Head_pin":"P9_34","$PINS":"","ADDR/OFFSET":"","Name":"AGND","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
+{"Head_pin":"P9_35","$PINS":"","ADDR/OFFSET":"","Name":"AIN6","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"A8","Notes":""},
+{"Head_pin":"P9_36","$PINS":"","ADDR/OFFSET":"","Name":"AIN5","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"B8","Notes":""},
+{"Head_pin":"P9_37","$PINS":"","ADDR/OFFSET":"","Name":"AIN2","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"B7","Notes":""},
+{"Head_pin":"P9_38","$PINS":"","ADDR/OFFSET":"","Name":"AIN3","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"A7","Notes":""},
+{"Head_pin":"P9_39","$PINS":"","ADDR/OFFSET":"","Name":"AIN0","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"B6","Notes":""},
+{"Head_pin":"P9_40","$PINS":"","ADDR/OFFSET":"","Name":"AIN1","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"C7","Notes":""},
 {"Head_pin":"P9_41A","$PINS":109,"ADDR/OFFSET":"0x9b4/1b4","Name":"CLKOUT2","GPIO No":20,"Mode7":"gpio0[20]","Mode6":"EMU3_mux0","Mode5":"pr1_pru0_pru_r31_16","Mode4":"timer7_mux1","Mode3":"clkout2","Mode2":"tclkin","Mode1":"","Mode0":"xdma_event_intr1","PIN":"D14","Notes":""},
 //{"Head_pin":"P9_41B","$PINS":null,"ADDR/OFFSET":"0x9a8/1a8","Name":"GPIO3_20","GPIO No":116,"Mode7":"gpio3[20]","Mode6":"pr1_pru0_pru_r31_6","Mode5":"pr1_pru0_pru_r30_6","Mode4":"emu3","Mode3":"Mcasp1_axr0","Mode2":"","Mode1":"eQEP0_index","Mode0":"mcasp0_axr1","PIN":"D13","Notes":""},
 {"Head_pin":"P9_42A","$PINS":89,"ADDR/OFFSET":"0x964/164","Name":"GPIO0_7","GPIO No":7,"Mode7":"gpio0[7]","Mode6":"xdma_event_intr2","Mode5":"mmc0_sdwp","Mode4":"spi1_sclk","Mode3":"pr1_ecap0_ecap_capin_apwm_o","Mode2":"spi1_cs1","Mode1":"uart3_txd","Mode0":"eCAP0_in_PWM0_out","PIN":"C18","Notes":"mcasp0"},
 //{"Head_pin":"P9_42B","$PINS":null,"ADDR/OFFSET":"0x9a0/1a0","Name":"GPIO3_18","GPIO No":114,"Mode7":"gpio3[18]","Mode6":"pr1_pru0_pru_r31_4","Mode5":"pr1_pru0_pru_r30_4","Mode4":"","Mode3":"Mcasp1_aclkx","Mode2":"Mcaspo_axr2","Mode1":"eQEP0A_in","Mode0":"Mcasp0_aclkr","PIN":"B12","Notes":""},
-{"Head_pin":"P9_43","$PINS":null,"ADDR/OFFSET":"","Name":"GND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""},
-{"Head_pin":"P9_44","$PINS":null,"ADDR/OFFSET":"","Name":"GND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""},
-{"Head_pin":"P9_45","$PINS":null,"ADDR/OFFSET":"","Name":"GND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""},
-{"Head_pin":"P9_46","$PINS":null,"ADDR/OFFSET":"","Name":"GND","GPIO No":null,"Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""}];
+{"Head_pin":"P9_43","$PINS":"","ADDR/OFFSET":"","Name":"GND","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""},
+{"Head_pin":"P9_44","$PINS":"","ADDR/OFFSET":"","Name":"GND","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""},
+{"Head_pin":"P9_45","$PINS":"","ADDR/OFFSET":"","Name":"GND","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""},
+{"Head_pin":"P9_46","$PINS":"","ADDR/OFFSET":"","Name":"GND","GPIO No":"","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":""}];
 

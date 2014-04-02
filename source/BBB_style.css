@@ -41,6 +41,10 @@ table td {
 	background-color: blue;
 	opacity: 0;
 }
+.serialdebugPin {
+	background-color: #9b59b6;
+	opacity: 0;
+}
 
 .opacity {
 	opacity: 0.5;
@@ -53,17 +57,8 @@ table td {
 	top: 6px;
 }
 
-.hdmiPin:hover, .emmc2Pin:hover, .i2c2Pin:hover, .mcasp0Pin:hover {
+.hdmiPin:hover, .emmc2Pin:hover, .i2c2Pin:hover, .mcasp0Pin:hover, .powerPin:hover, .freePin:hover, .unknowPin:hover, .serialdebugPin:hover {
 	opacity: 1;
-}
-.powerPin:hover {
-	opacity: 1;
-}
-.freePin:hover {
-	opacity: 1;
-}
-.unknowPin:hover {
-   	opacity: 1;
 }
 
 p {
