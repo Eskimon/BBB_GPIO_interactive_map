@@ -3,11 +3,11 @@ BBB_GPIO_interactive_map
 
 BeagleBone Black GPIO interactive map, to easily know which pin does what (and much more soon)!
 
-## How is it working?
+### How is it working?
 
 Easy, just hover the BeagleBone to see the different roles and mode that a Pin can have !
 
-## Cool! can I have a local copy or a live copy on my website ?
+### Cool! can I have a local copy or a live copy on my website ?
 
 Sure, do whatever you want with it! Juste don't forget the people behind it please and share your improvment to make it even better!
 People to thank:
@@ -15,7 +15,7 @@ People to thank:
 + [Derek Molloy](http://derekmolloy.ie/), from whom I took the two original PDFs with all the information that I compiled in a .odt file to easily update modification and export to JSON (find all of that in the "documents" folder ;) ).
 + [Eskimon](http://eskimon.fr), it's me, I wrote all the rest of the things you can see in the "source" folder. If you want to use the map on your own website, I would appreciate a link to the page of the project as "source" as described in the licence :) [Source](http://eskimon.fr/beaglebone-black-gpio-interactive-map).
 
-## How to embed the map on your website.
+### How to embed the map on your website.
 
 It's very simple.
 First, copy the BBB_style.css to your stylesheet folder (or root folder). Then do the same with the BBB_script.js to your scripts folder (or root folder).
