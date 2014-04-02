@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>BeagleBone Black GPIO interactive map</title>
+        <link type="text/css" rel="stylesheet" href="BBB_style.css" />
+    </head>
+    <body>
+	    <div id="interactiveMapContainer">
+		    <table>
+	    		<tr>
+	    			<td class="head">Header</td>
+	    			<td class="head">$PINS</td>
+	    			<td class="head">Addr/Offset</td>
+	    			<td class="head">GPIO #</td>
+	    			<td class="head">Name</td>
+	    			<td class="head">PIN</td>
+	    			<td  class="head" colspan="2">Notes</td>
+	    		</tr>
+	    		<tr id="trTop"><td> - </td><td> - </td><td> - </td><td> - </td><td> - </td><td> - </td><td colspan="2"> - </td></tr>
+	    		<tr>
+	    			<td class="head">Mode 7</td>
+	    			<td class="head">Mode 6</td>
+	    			<td class="head">Mode 5</td>
+	    			<td class="head">Mode 4</td>
+	    			<td class="head">Mode 3</td>
+	    			<td class="head">Mode 2</td>
+	    			<td class="head">Mode 1</td>
+	    			<td class="head">Mode 0</td>
+	    		</tr>
+	    		<tr id="trBottom">
+	    			<td> - </td><td> - </td><td> - </td><td> - </td><td> - </td><td> - </td><td> - </td><td> - </td>
+	    		</tr>
+		    </table>
+            <p id="imageContainer">
+	    	<img src="bbb_horizontal.jpg" id="bgPic">
+            </p> <br>
+            <p id="optionsReveal">
+	    	<input type="checkbox" id="inputfreePin">Show available Pin <br>
+		    <input type="checkbox" id="inputhdmiPin"> Show hdmi Pin (for the display, can eventually be used as GPIO) <br>
+		    <input type="checkbox" id="inputemmc2Pin"> Show emmc2 Pin (for the internal memory, can eventually be used as GPIO) <br>
+		    <input type="checkbox" id="inputi2c2Pin"> Show I2C2 Pin (needed for capes and power management) <br>
+		    <input type="checkbox" id="inputmcasp0Pin"> Show mcasp0 Pin (needed for capes and power management) <br>
+		    <input type="checkbox" id="inputunknowPin"> Show &quot;unsure about&quot; Pin (not sure what they are up to!) <br>
+		    <input type="checkbox" id="inputpowerPin"> Show power related Pin <br>
+		    </p>
+	    </div>
+	    <script type="text/javascript" src="BBB_script.js"></script>
+    </body>
+</html>

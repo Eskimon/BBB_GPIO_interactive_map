@@ -1,0 +1,71 @@
+table {
+	font-size: 10px;
+}
+
+table td {
+	text-align: center;
+}
+
+.head {
+  font-weight: bold;
+  background: #eee;
+}
+
+.headerPin {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	border: 1px solid #bbb;
+	-webkit-border-radius: 1px;
+	-moz-border-radius: 1px;
+	border-radius: 1px;
+}
+.headerPin:hover {
+	cursor: pointer;
+}
+
+.hdmiPin, .emmc2Pin, .i2c2Pin, .mcasp0Pin {
+	background-color: yellow;
+	opacity: 0;
+}
+
+.powerPin {
+	background-color: red;
+	opacity: 0;
+}
+.freePin {
+	background-color: white;
+	opacity: 0;
+}
+.unknowPin {
+	background-color: blue;
+	opacity: 0;
+}
+
+.opacity {
+	opacity: 0.5;
+}
+
+.legend {
+	display: inline-block;
+	position: relative;
+	opacity: 1;
+	top: 6px;
+}
+
+.hdmiPin:hover, .emmc2Pin:hover, .i2c2Pin:hover, .mcasp0Pin:hover {
+	opacity: 1;
+}
+.powerPin:hover {
+	opacity: 1;
+}
+.freePin:hover {
+	opacity: 1;
+}
+.unknowPin:hover {
+   	opacity: 1;
+}
+
+p {
+	margin: 0px;
+}
