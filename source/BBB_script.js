@@ -110,112 +110,24 @@ var parent = document.getElementById('interactiveMapContainer');
 })()
 
 function addCheckboxBehavior() {
-	var inputFree = document.getElementById('inputfreePin');
-	var inputHdmi = document.getElementById('inputhdmiPin');
-	var inputEmmc2 = document.getElementById('inputemmc2Pin');
-	var inputI2c2 = document.getElementById('inputi2c2Pin');
-	var inputMcasp0 = document.getElementById('inputmcasp0Pin');
-	var inputNotSure = document.getElementById('inputunknowPin');
-	var inputPower = document.getElementById('inputpowerPin');
-
-	inputFree.addEventListener('click', function() {
-
-		if(inputFree.checked) {
-			var elements = document.querySelectorAll('.freePin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        el.className += ' ' + 'opacity';
-      });
-		} else {
-		  var elements = document.querySelectorAll('.freePin');
-      Array.prototype.forEach.call(elements, function(el, i){
+	var el = document.getElementById('optionsReveal');
+	var inputs = el.getElementsByTagName('input'); 
+	for(var i=0; i<inputs.length; i++) {
+		inputs[i].addEventListener('click', function() {
+			console.log(this);
+			var nom = this.id.substr(5);
+			var elements = document.querySelectorAll('.' + nom);
+			if(this.checked) {
+				Array.prototype.forEach.call(elements, function(el, i) {
+        			el.className += ' ' + 'opacity';
+        		});
+			} else {
+  				Array.prototype.forEach.call(elements, function(el, i){
         			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-      });
-		}
-	});
-
-	inputHdmi.addEventListener('click', function() {
-  	if(inputHdmi.checked) {
-			var elements = document.querySelectorAll('.hdmiPin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        el.className += ' ' + 'opacity';
-      });
-		} else {
-		  var elements = document.querySelectorAll('.hdmiPin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-      });
-		}
-	});
-
-	inputEmmc2.addEventListener('click', function() {
-	  if(inputEmmc2.checked) {
-			var elements = document.querySelectorAll('.emmc2Pin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        el.className += ' ' + 'opacity';
-      });
-		} else {
-		  var elements = document.querySelectorAll('.emmc2Pin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-      });
-		}
-	});
-
-	inputI2c2.addEventListener('click', function() {
-	  if(inputI2c2.checked) {
-			var elements = document.querySelectorAll('.i2c2Pin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        el.className += ' ' + 'opacity';
-      });
-		} else {
-		  var elements = document.querySelectorAll('.i2c2Pin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-      });
-		}
-	});
-
-	inputMcasp0.addEventListener('click', function() {
-	  if(inputMcasp0.checked) {
-			var elements = document.querySelectorAll('.mcasp0Pin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        el.className += ' ' + 'opacity';
-      });
-		} else {
-		  var elements = document.querySelectorAll('.mcasp0Pin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-      });
-		}
-	});
-
-	inputNotSure.addEventListener('click', function() {
-	  if(inputNotSure.checked) {
-			var elements = document.querySelectorAll('.unknowPin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        el.className += ' ' + 'opacity';
-      });
-		} else {
-		  var elements = document.querySelectorAll('.unknowPin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-      });
-		}
-	});
-
-	inputPower.addEventListener('click', function() {
-	  if(inputPower.checked) {
-			var elements = document.querySelectorAll('.powerPin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        el.className += ' ' + 'opacity';
-      });
-		} else {
-		  var elements = document.querySelectorAll('.powerPin');
-      Array.prototype.forEach.call(elements, function(el, i){
-        			el.className = el.className.replace(new RegExp('(^|\\b)' + 'opacity'.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
-      });
-		}
-	});
+        		});
+			}
+		});
+	}
 }
 
 function addElements(liste) {
@@ -225,24 +137,28 @@ function addElements(liste) {
 	var deltaY = 0;
 	var prefix = "";
 
-  var offsets = pic.getBoundingClientRect();
+  	var offsets = pic.getBoundingClientRect();
 
-	if(liste === P8) {
-		xOffset = 135 + offsets.left;//pic.offsetLeft;
-		yOffset = 21 + offsets.top;//pic.offsetTop;
-		deltaY = +0.1;
-		deltaX = +14.5;
-		prefix = "P8_";
-	} else if(liste === P9) {
-		xOffset = 134 + offsets.left;//pic.offsetLeft;
-		yOffset = 299 + offsets.top;//pic.offsetTop;
-		deltaY = +0.03;
-		deltaX = +14.4;
-		prefix = "P9_";
-	} else {
-		//for future case to add new header ? JTAG ?
-		return;
-	}
+  	switch(liste) {
+  		case(P8) :
+  			xOffset = 135 + offsets.left;//pic.offsetLeft;
+			yOffset = 21 + offsets.top;//pic.offsetTop;
+			deltaY = +0.1;
+			deltaX = +14.5;
+			prefix = "P8_";
+  			break;
+  		case(P9) :
+			xOffset = 134 + offsets.left;//pic.offsetLeft;
+			yOffset = 299 + offsets.top;//pic.offsetTop;
+			deltaY = +0.03;
+			deltaX = +14.4;
+			prefix = "P9_";
+  			break;
+  		default :
+  			return;
+  			break;
+  	}
+
 	//populate
 	for(var x in liste) {
     	var newSpan = document.createElement('span');
@@ -288,13 +204,10 @@ function hovering(evt) {
 	var idx = parseInt(id.substr(3))-1;
 	var liste = null;
 
-	if(P === "P8") {
-		liste = P8;
-	} else if(P === "P9") {
-		liste = P9;
-	} else {
-		//for future case to add new header ? (JTAG...)
-		return;
+	switch(P) {
+		case('P8') : liste = P8; break;
+		case('P9') : liste = P9; break;
+		default: return; break;
 	}
 
 	var data = liste[idx]; //the element to use
@@ -321,9 +234,3 @@ function hovering(evt) {
 	content += '</tr>';
 	trBottom.innerHTML = content;
 }
-
-
-
-
-
-
