@@ -13,8 +13,8 @@ var P8Offset = {
 	"xOffset" : 135, //for the x axis
 	"yOffset" : 21, //for y axis
 	"deltaX" : +14.5, //what is the derivation on the X axis between n and n-1 pin
-	"deltaY" : +0.1, //what is the derivation on the Y axis between n and n-1 pin
-	"pitch" : 15, //space between two pins (on the vertical axis), need to be increase on bigger resolution picture
+	"deltaY" : -15.1, //what is the derivation on the Y axis between n and n-1 pin
+	"direction" : "horizontal", //to know if the header is oriented horizontally or vertically
 	"prefix" : "P8" //The name of this header (for the span IDs )
 };
 
@@ -22,8 +22,8 @@ var P9Offset = {
 	"xOffset" : 134,
 	"yOffset" : 299,
 	"deltaX" : +14.4,
-	"deltaY" : +0.03,
-	"pitch" : 15,
+	"deltaY" : -15.03,
+	"direction" : "horizontal",
 	"prefix" : "P9"
 };
 
@@ -32,9 +32,17 @@ var DSHOffset = {
 	"xOffset" : 262,
 	"yOffset" : 266,
 	"deltaX" : +14.4,
-	"deltaY" : +0.03,
-	"pitch" : 0, //value of 0, the connector is on one line only
+	"deltaY" : 0,
 	"prefix" : "DSH"
+};
+
+// User LEDs
+var USROffset = {
+	"xOffset" : 39,
+	"yOffset" : 28,
+	"deltaX" : +0.0,
+	"deltaY" : +11,
+	"prefix" : "USR"
 };
 
 /**********************************************************************/
@@ -45,6 +53,7 @@ var DSHOffset = {
 		addElements(P8);
 		addElements(P9);
 		addElements(DSH);
+		addElements(USR);
 		addCheckboxBehavior();
 	});
 })()
@@ -83,6 +92,7 @@ function addElements(liste) {
   		case(P8) : offset = P8Offset; break;
   		case(P9) : offset = P9Offset; break;
   		case(DSH) : offset = DSHOffset; break;
+  		case(USR) : offset = USROffset; break;
   		default : return; break;
   	}
   	offset.xOffset += picOffset.left; //add the horizontal picture offset
@@ -102,6 +112,7 @@ function addElements(liste) {
 			case("I2C2"): newSpan.classList.add("i2c2Pin");break;
 			case("mcasp0"): newSpan.classList.add("mcasp0Pin");break;
 			case("Serial Debug Header"): newSpan.classList.add("serialdebugPin");break;
+			case("USR"): newSpan.classList.add("usrledPin");break;
 			case(""): newSpan.classList.add("freePin");break;
 			default: newSpan.classList.add("unknowPin");break;
 		}
@@ -111,18 +122,21 @@ function addElements(liste) {
 		}
 
     	// position of the span element, mathematics here I come
-    	if(offset.pitch === 0) {
-    		//element on one line (like JTAG)
+    	if(offset.deltaX > 0 && offset.deltaY === 0) { // one line disposal (DSH)
     		newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1))) + "px";
 			newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
-    	} else {
-    		//elements on two line (like P8/9 headers)
-	    	if(realX%2) {
-				  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1)/2)) + "px";
-				  newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
-	    	} else {
-				  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-2)/2)) + "px";
-				  newSpan.style.top = (offset.yOffset - offset.pitch + offset.deltaY*realX) + "px";
+    	} else if(offset.deltaX === 0 && offset.deltaY > 0) { // one column disposal (USR)
+			newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1))) + "px";
+			newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
+    	} else { //elements on two line (like P8/9 headers)
+    		if(offset.direction === "horizontal") {
+		    	if(realX%2) {
+					newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1)/2)) + "px";
+					newSpan.style.top = (offset.yOffset) + "px";
+		    	} else {
+					newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-2)/2)) + "px";
+					newSpan.style.top = (offset.yOffset + offset.deltaY) + "px";
+		    	}
 	    	}
 	    }
 
@@ -149,6 +163,7 @@ function hovering(evt) {
 		case('P8') : liste = P8; break;
 		case('P9') : liste = P9; break;
 		case('DSH') : liste = DSH; break;
+		case('USR') : liste = USR; break;
 		default: return; break;
 	}
 
@@ -181,6 +196,13 @@ function hovering(evt) {
 
 // LONNNGGGGG definition of all the Pins...
 
+var USR = [
+{"Head_pin":"USR_0","$PINS":"21","ADDR/OFFSET":"0x854/054","GPIO No.":"53","Name":"GPIO1_21","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"USR"},
+{"Head_pin":"USR_1","$PINS":"22","ADDR/OFFSET":"0x858/058","GPIO No.":"86","Name":"GPIO1_22","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"USR"},
+{"Head_pin":"USR_2","$PINS":"23","ADDR/OFFSET":"0x85c/05c","GPIO No.":"87","Name":"GPIO1_23","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"USR"},
+{"Head_pin":"USR_3","$PINS":"24","ADDR/OFFSET":"0x860/060","GPIO No.":"88","Name":"GPIO1_24","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"USR"},
+];
+
 var DSH = [
 {"Head_pin":"DSH_01","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
 {"Head_pin":"DSH_02","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"NC","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Not Connected"},
@@ -189,7 +211,7 @@ var DSH = [
 {"Head_pin":"DSH_05","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"RXD","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Serial Debug Header"},
 {"Head_pin":"DSH_06","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"NC","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Not Connected"},
 ];
-""
+
 var P8 = [
 {"Head_pin":"P8_01","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},
 {"Head_pin":"P8_02","$PINS":"","ADDR/OFFSET":"","GPIO No.":"","Name":"GND","Mode7":"","Mode6":"","Mode5":"","Mode4":"","Mode3":"","Mode2":"","Mode1":"","Mode0":"","PIN":"","Notes":"Power: Ground"},

@@ -45,6 +45,10 @@ table td {
 	background-color: #9b59b6;
 	opacity: 0;
 }
+.usrledPin {
+	background-color: #3498db;
+	opacity: 0;
+}
 
 .opacity {
 	opacity: 0.5;
@@ -57,7 +61,7 @@ table td {
 	top: 6px;
 }
 
-.hdmiPin:hover, .emmc2Pin:hover, .i2c2Pin:hover, .mcasp0Pin:hover, .powerPin:hover, .freePin:hover, .unknowPin:hover, .serialdebugPin:hover {
+.hdmiPin:hover, .emmc2Pin:hover, .i2c2Pin:hover, .mcasp0Pin:hover, .powerPin:hover, .freePin:hover, .unknowPin:hover, .serialdebugPin:hover, .usrledPin:hover {
 	opacity: 1;
 }
 
