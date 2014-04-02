@@ -101,6 +101,22 @@ var trTop = document.getElementById('trTop');
 var trBottom = document.getElementById('trBottom');
 var parent = document.getElementById('interactiveMapContainer');
 
+var P8Offset = {
+	"xOffset" : 135,
+	"yOffset" : 21,
+	"deltaY" : +0.1,
+	"deltaX" : +14.5,
+	"prefix" : "P8_"
+};
+
+var P9Offset = {
+	"xOffset" : 134,
+	"yOffset" : 299,
+	"deltaY" : +0.03,
+	"deltaX" : +14.4,
+	"prefix" : "P9_"
+};
+
 (function(){
 	pic.addEventListener('load', function() {
 		addElements(P8);
@@ -131,39 +147,23 @@ function addCheckboxBehavior() {
 }
 
 function addElements(liste) {
-	var xOffset = 0;
-	var yOffset = 0;
-	var deltaX = 0;
-	var deltaY = 0;
-	var prefix = "";
+	var offset;
 
-  	var offsets = pic.getBoundingClientRect();
+  	var picOffset = pic.getBoundingClientRect();
 
   	switch(liste) {
-  		case(P8) :
-  			xOffset = 135 + offsets.left;//pic.offsetLeft;
-			yOffset = 21 + offsets.top;//pic.offsetTop;
-			deltaY = +0.1;
-			deltaX = +14.5;
-			prefix = "P8_";
-  			break;
-  		case(P9) :
-			xOffset = 134 + offsets.left;//pic.offsetLeft;
-			yOffset = 299 + offsets.top;//pic.offsetTop;
-			deltaY = +0.03;
-			deltaX = +14.4;
-			prefix = "P9_";
-  			break;
-  		default :
-  			return;
-  			break;
+  		case(P8) : offset = P8Offset; break;
+  		case(P9) : offset = P9Offset; break;
+  		default : return; break;
   	}
+  	offset.xOffset += picOffset.left;
+  	offset.yOffset += picOffset.top;
 
 	//populate
 	for(var x in liste) {
     	var newSpan = document.createElement('span');
     	var realX = parseInt(x)+1;
-    	newSpan.setAttribute('id', prefix + realX);
+    	newSpan.setAttribute('id', offset.prefix + realX);
     	newSpan.classList.add("headerPin");
     	//class according to notes
 		switch(liste[x].Notes) {
@@ -182,13 +182,13 @@ function addElements(liste) {
     	if(realX%2) {
 			  // newSpan.style.left = (xOffset + deltaX*realX) + "px";
 			  // newSpan.style.top = (yOffset - deltaY*((realX-1)/2)) + "px";
-			  newSpan.style.left = (xOffset + deltaX*((realX-1)/2)) + "px";
-			  newSpan.style.top = (yOffset + deltaY*realX) + "px";
+			  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1)/2)) + "px";
+			  newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
     	} else {
     		// newSpan.style.left = (xOffset + 15 + deltaX*realX) + "px";
     		// newSpan.style.top = (yOffset - deltaY*((realX-2)/2)) + "px";
-			  newSpan.style.left = (xOffset + deltaX*((realX-2)/2)) + "px";
-			  newSpan.style.top = (yOffset - 15 + deltaY*realX) + "px";
+			  newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-2)/2)) + "px";
+			  newSpan.style.top = (offset.yOffset - 15 + offset.deltaY*realX) + "px";
     	}
     	//add the eventListener
     	newSpan.addEventListener('mouseover', hovering);
