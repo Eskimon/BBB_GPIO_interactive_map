@@ -128,7 +128,7 @@ function addElements(liste) {
     	} else if(offset.deltaX === 0 && offset.deltaY > 0) { // one column disposal (USR)
 			newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1))) + "px";
 			newSpan.style.top = (offset.yOffset + offset.deltaY*realX) + "px";
-    	} else { //elements on two line (like P8/9 headers)
+    	} else { //elements on two lines (like P8/9 headers)
     		if(offset.direction === "horizontal") {
 		    	if(realX%2) {
 					newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-1)/2)) + "px";
@@ -136,6 +136,14 @@ function addElements(liste) {
 		    	} else {
 					newSpan.style.left = (offset.xOffset + offset.deltaX*((realX-2)/2)) + "px";
 					newSpan.style.top = (offset.yOffset + offset.deltaY) + "px";
+		    	}
+	    	} else if(offset.direction === "vertical") { //not tested !!!
+	    		if(realX%2) {
+					newSpan.style.left = (offset.xOffset) + "px";
+					newSpan.style.top = (offset.yOffset + offset.deltaY*((realX-1)/2)) + "px";
+		    	} else {
+					newSpan.style.left = (offset.xOffset + offset.deltaX) + "px";
+					newSpan.style.top = (offset.yOffset + offset.deltaY*((realX-2)/2)) + "px";
 		    	}
 	    	}
 	    }
