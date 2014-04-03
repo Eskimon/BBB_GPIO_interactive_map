@@ -188,14 +188,9 @@ function hovering(evt) {
 	trTop.innerHTML = content; //update the top row (functions)
 
 	content = '<tr>';
-	content += '<td>' + ((data['Mode7'] != "") ? data['Mode7'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode6'] != "") ? data['Mode6'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode5'] != "") ? data['Mode5'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode4'] != "") ? data['Mode4'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode3'] != "") ? data['Mode3'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode2'] != "") ? data['Mode2'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode1'] != "") ? data['Mode1'] : ' - ') + '</td>';
-	content += '<td>' + ((data['Mode0'] != "") ? data['Mode0'] : ' - ') + '</td>';
+	for(var i=7; i>=0; i--) {
+		content += '<td>' + ((data['Mode'+i] != "") ? data['Mode'+i] : ' - ') + '</td>';
+	}
 	content += '</tr>';
 	trBottom.innerHTML = content; //update the bottome row (modes)
 }
