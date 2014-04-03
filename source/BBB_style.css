@@ -1,14 +1,12 @@
-table {
+table.data {
 	font-size: 10px;
-}
-
-table td {
 	text-align: center;
 }
 
-.head {
+table.data th {
   font-weight: bold;
   background: #eee;
+  width: 12.5%;
 }
 
 .headerPin {
